@@ -3,7 +3,7 @@
 ![AlmondSense Preview](/public/og-image.jpg)
 
 ## Link Demo
-https://labubu-project.vercel.app/
+https://projectlabubu.vercel.app/
 
 ## Data Akurat, Pertanian Lebih Cerdas
 
@@ -158,7 +158,7 @@ Dashboard admin tersedia untuk mengelola pengajuan layanan dari pelanggan.
 
 ## 📞 Kontak
 
-- **Website**: https://labubu-project.vercel.app/
+- **Website**: https://www.labubu.my.id/
 - **Email**: info@almondsense.id
 - **Telepon**: +62 21 1234 5678
 
