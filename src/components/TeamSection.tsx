@@ -1,12 +1,12 @@
 import { Linkedin, Mail } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 
-import ceoPhoto from '@/assets/team/ceo.jpg';
-import ctoPhoto from '@/assets/team/cto.jpg';
-import cooPhoto from '@/assets/team/coo.jpg';
-import cpoPhoto from '@/assets/team/cpo.jpg';
-import cfoPhoto from '@/assets/team/cfo.jpg';
-import cmoPhoto from '@/assets/team/cmo.jpg';
+import ceoPhoto from '@/assets/team/ceo.png';
+import ctoPhoto from '@/assets/team/cto.png';
+import cooPhoto from '@/assets/team/coo.png';
+import cpoPhoto from '@/assets/team/cpo.png';
+import cfoPhoto from '@/assets/team/cfo.png';
+import cmoPhoto from '@/assets/team/cmo.png';
 
 const TeamSection = () => {
   const team = [
