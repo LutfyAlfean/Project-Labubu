@@ -2,6 +2,9 @@
 
 ![AlmondSense Preview](/public/og-image.jpg)
 
+## Link Demo
+https://labubu-project.vercel.app/
+
 ## Data Akurat, Pertanian Lebih Cerdas
 
 **AlmondSense** adalah platform teknologi agrikultur berbasis IoT dan AI untuk pemantauan lahan, analisis tanaman, dan pengambilan keputusan berbasis data. Kami membantu petani dan pelaku agribisnis meningkatkan produktivitas melalui teknologi yang mudah diakses dan akurat.
@@ -155,7 +158,7 @@ Dashboard admin tersedia untuk mengelola pengajuan layanan dari pelanggan.
 
 ## 📞 Kontak
 
-- **Website**: [almondsense.id](https://almondsense.id)
+- **Website**: https://labubu-project.vercel.app/
 - **Email**: info@almondsense.id
 - **Telepon**: +62 21 1234 5678
 
@@ -163,4 +166,4 @@ Dashboard admin tersedia untuk mengelola pengajuan layanan dari pelanggan.
 
 ## 📄 License
 
-© 2024 AlmondSense. All rights reserved.
+© 2025 AlmondSense. All rights reserved.
