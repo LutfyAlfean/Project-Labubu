@@ -1,4 +1,4 @@
-  scan_stack_images:
+scan_stack_images:
     name: Trivy - Scan Stack Images (3rd party)
     runs-on: ubuntu-latest
     needs: [trivy_config_fs]
@@ -17,7 +17,7 @@
           - id: haproxy
             image: haproxy:2.9
 
-    steps:
+steps:
       - name: Pull image
         run: docker pull "${{ matrix.image }}"
 
