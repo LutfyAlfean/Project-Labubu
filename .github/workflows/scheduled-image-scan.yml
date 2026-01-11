@@ -1,0 +1,51 @@
+name: Scheduled - Trivy Image Scan (Stack)
+
+on:
+  schedule:
+    - cron: "0 2 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  security-events: write
+
+jobs:
+  scan_stack_images:
+    name: Trivy Scan Stack Images
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - id: uptime_kuma
+            image: louislam/uptime-kuma:1
+          - id: nginx_proxy_manager
+            image: jc21/nginx-proxy-manager:latest
+          - id: mariadb_aria
+            image: jc21/mariadb-aria:latest
+          - id: haproxy
+            image: haproxy:2.9
+
+    steps:
+      - name: Pull image
+        run: docker pull "${{ matrix.image }}"
+
+      - name: Trivy image scan (SARIF)
+        uses: aquasecurity/trivy-action@0.33.1
+        with:
+          scan-type: "image"
+          image-ref: "${{ matrix.image }}"
+          format: "sarif"
+          output: "trivy-${{ matrix.id }}.sarif"
+          severity: "CRITICAL,HIGH"
+          # biar job tetap hijau tapi report tetap ada (enak buat SS)
+          exit-code: "0"
+          hide-progress: true
+
+      - name: Upload SARIF
+        if: always()
+        uses: github/codeql-action/upload-sarif@v4
+        with:
+          sarif_file: "trivy-${{ matrix.id }}.sarif"
+          category: "scheduled-trivy-${{ matrix.id }}"
+
