@@ -87,31 +87,37 @@ Buat file:
 ```cfg
 global
   log stdout format raw local0
-  maxconn 2000
+  maxconn 4000
 
 defaults
   log global
   mode http
   option httplog
+  option dontlognull
   timeout connect 5s
-  timeout client  30s
-  timeout server  30s
+  timeout client  60s
+  timeout server  60s
 
 frontend fe_http
   bind :8080
   default_backend be_apps
 
 backend be_apps
+  balance roundrobin
+
+  # health check (ubah ke /health kalau ada)
   option httpchk GET /
   http-check expect status 200
 
-  # app1 primary (host port 7903)
+  # 3 server aktif (load balance)
   server app1 host.docker.internal:7903 check inter 2s fall 2 rise 2
+  server app2 host.docker.internal:7904 check inter 2s fall 2 rise 2
+  server app3 host.docker.internal:7905 check inter 2s fall 2 rise 2
 
-  # app2 backup (host port 7904)
-  server app2 host.docker.internal:7904 check inter 2s fall 2 rise 2 backup
+  # 1 server backup (dipakai kalau semua primary down)
+  server app4 host.docker.internal:7906 check inter 2s fall 2 rise 2 backup
 
-# HAProxy Stats
+# (opsional) HAProxy stats
 listen stats
   bind :8404
   mode http
@@ -119,8 +125,8 @@ listen stats
   stats uri /stats
   stats refresh 5s
   stats realm HAProxy\ Stats
-  # (opsional) auth bisa dihapus kalau pakai Access List di NPM
   stats auth admin:PasswordKuatGantiIni
+
 ```
 
 > Jika aplikasi tidak 200 di `/`, ganti `GET /` menjadi endpoint health mis. `GET /health`.
