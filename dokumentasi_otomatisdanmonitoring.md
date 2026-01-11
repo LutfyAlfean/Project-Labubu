@@ -207,9 +207,14 @@ services:
 
 networks:
   labubu-net:
+    external: true
     name: labubu-net
 ```
-
+buat network labubu di docker
+```
+docker network create labubu-net 2>/dev/null || true
+docker ps -a --format "table {{.Names}}\t{{.Status}}"
+```
 Naikkan service:
 ```bash
 cd /opt/labubu
