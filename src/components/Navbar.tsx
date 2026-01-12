@@ -32,7 +32,7 @@ const Navbar = () => {
               <Leaf className="w-5 h-5 text-primary-foreground" />
             </div>
             <span className="text-xl font-serif font-bold text-foreground">
-              Almond<span className="text-primary">Sense</span>
+              Technology<span className="text-primary">Sense</span>
             </span>
           </a>
 
