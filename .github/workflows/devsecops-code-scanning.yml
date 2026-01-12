@@ -10,6 +10,10 @@ permissions:
   actions: read
   security-events: write
 
+concurrency:
+  group: devsecops-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   trivy_sarif:
     name: Trivy (config/fs/image) + Upload SARIF
@@ -79,4 +83,14 @@ jobs:
         with:
           sarif_file: "trivy-image.sarif"
           category: "trivy-image"
+
+      - name: Upload reports (artifact)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: security-reports
+          path: |
+            trivy-config.sarif
+            trivy-fs.sarif
+            trivy-image.sarif
 

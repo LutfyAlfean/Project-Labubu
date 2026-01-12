@@ -9,6 +9,11 @@ permissions:
   contents: read
   security-events: write
 
+concurrency:
+  group: scheduled-trivy-${{ github.ref }}
+  cancel-in-progress: true
+
+
 jobs:
   scan_stack_images:
     name: Trivy Scan Stack Images
@@ -48,4 +53,3 @@ jobs:
         with:
           sarif_file: "trivy-${{ matrix.id }}.sarif"
           category: "scheduled-trivy-${{ matrix.id }}"
-
