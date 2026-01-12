@@ -1,0 +1,82 @@
+name: DevSecOps - Trivy SARIF to Code Scanning
+
+on:
+  push:
+    branches: [ "main" ]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  actions: read
+  security-events: write
+
+jobs:
+  trivy_sarif:
+    name: Trivy (config/fs/image) + Upload SARIF
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      # ---------- Trivy Config Scan ----------
+      - name: Trivy config scan (SARIF)
+        uses: aquasecurity/trivy-action@0.33.1
+        with:
+          scan-type: "config"
+          scan-ref: "."
+          format: "sarif"
+          output: "trivy-config.sarif"
+          severity: "CRITICAL,HIGH"
+          # biar workflow hijau buat screenshot, tapi hasil tetap ke-upload
+          exit-code: "0"
+          hide-progress: true
+
+      - name: Upload SARIF (config)
+        if: always()
+        uses: github/codeql-action/upload-sarif@v4
+        with:
+          sarif_file: "trivy-config.sarif"
+          category: "trivy-config"
+
+      # ---------- Trivy FS Scan ----------
+      - name: Trivy fs scan (SARIF)
+        uses: aquasecurity/trivy-action@0.33.1
+        with:
+          scan-type: "fs"
+          scan-ref: "."
+          format: "sarif"
+          output: "trivy-fs.sarif"
+          severity: "CRITICAL,HIGH"
+          exit-code: "0"
+          hide-progress: true
+
+      - name: Upload SARIF (fs)
+        if: always()
+        uses: github/codeql-action/upload-sarif@v4
+        with:
+          sarif_file: "trivy-fs.sarif"
+          category: "trivy-fs"
+
+      # ---------- Build & Trivy Image Scan ----------
+      - name: Build image (Dockerfile root)
+        run: docker build -t almondsense:ci -f ./Dockerfile .
+
+      - name: Trivy image scan (SARIF)
+        uses: aquasecurity/trivy-action@0.33.1
+        with:
+          scan-type: "image"
+          image-ref: "almondsense:ci"
+          format: "sarif"
+          output: "trivy-image.sarif"
+          severity: "CRITICAL,HIGH"
+          exit-code: "0"
+          hide-progress: true
+
+      - name: Upload SARIF (image)
+        if: always()
+        uses: github/codeql-action/upload-sarif@v4
+        with:
+          sarif_file: "trivy-image.sarif"
+          category: "trivy-image"
+
