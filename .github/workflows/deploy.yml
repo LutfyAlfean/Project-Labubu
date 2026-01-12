@@ -9,12 +9,14 @@ permissions:
   contents: read
   packages: write
 
+concurrency:
+  group: deploy-${{ github.ref }}
+  cancel-in-progress: true
+
 env:
   REGISTRY: ghcr.io
-  # Image akan jadi: ghcr.io/LutfyAlfean/Project-Labubu:latest
-  IMAGE: ghcr.io/${{ github.repository }}:latest
-  # Port internal container (sesuaikan kalau app kamu bukan 7903)
-  CONTAINER_PORT: "7903"
+  # GHCR package kamu (lowercase)
+  IMAGE_REPO: ghcr.io/lutfyalfean/project-labubu
 
 jobs:
   build_push:
@@ -27,22 +29,22 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
-      - name: Login to GHCR
+      - name: Login to GHCR (push)
         uses: docker/login-action@v3
         with:
-          registry: ${{ env.REGISTRY }}
+          registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Build & Push
+      - name: Build & Push (latest + sha)
         uses: docker/build-push-action@v6
         with:
           context: .
           file: ./Dockerfile
           push: true
           tags: |
-            ${{ env.IMAGE }}
-            ghcr.io/${{ github.repository }}:${{ github.sha }}
+            ${{ env.IMAGE_REPO }}:latest
+            ${{ env.IMAGE_REPO }}:sha-${{ github.sha }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
@@ -61,44 +63,37 @@ jobs:
           script: |
             set -euo pipefail
 
-            IMAGE="${{ env.IMAGE }}"
-            CPORT="${{ env.CONTAINER_PORT }}"
+            IMAGE="${{ env.IMAGE_REPO }}:sha-${{ github.sha }}"
+            CONTAINER_PORT="7903"
 
-            echo "==> Login GHCR (needed if image is private)"
+            echo "==> Login GHCR (pull)"
             echo "${{ secrets.GHCR_TOKEN }}" | docker login ghcr.io -u "${{ secrets.GHCR_USER }}" --password-stdin
 
-            echo "==> Pull latest image: ${IMAGE}"
+            echo "==> Pull image: ${IMAGE}"
             docker pull "${IMAGE}"
-
-            # OPTIONAL: kalau kamu pengen tetap pakai nama lokal "almondsense:latest"
-            # docker tag "${IMAGE}" almondsense:latest
-            # IMAGE="almondsense:latest"
 
             restart_one () {
               NAME="$1"
-              HPORT="$2"
+              HOST_PORT="$2"
 
-              echo "---- Rolling restart: ${NAME} (host:${HPORT} -> container:${CPORT}) ----"
+              echo "---- Rolling restart: ${NAME} (host:${HOST_PORT} -> container:${CONTAINER_PORT}) ----"
 
-              # stop & remove old container if exists
               docker rm -f "${NAME}" >/dev/null 2>&1 || true
 
-              # start new container
               docker run -d --restart unless-stopped \
                 --name "${NAME}" \
-                -p "${HPORT}:${CPORT}" \
+                -p "${HOST_PORT}:${CONTAINER_PORT}" \
                 "${IMAGE}"
 
-              # health check (optional)
               for i in {1..25}; do
-                if curl -fsS "http://localhost:${HPORT}" >/dev/null 2>&1; then
-                  echo "OK: ${NAME} is up on port ${HPORT}"
+                if curl -fsS "http://localhost:${HOST_PORT}" >/dev/null 2>&1; then
+                  echo "OK: ${NAME} is up on port ${HOST_PORT}"
                   return 0
                 fi
                 sleep 1
               done
 
-              echo "WARN: ${NAME} not responding on port ${HPORT}"
+              echo "WARN: ${NAME} not responding on port ${HOST_PORT}"
               docker logs --tail 80 "${NAME}" || true
               return 0
             }
