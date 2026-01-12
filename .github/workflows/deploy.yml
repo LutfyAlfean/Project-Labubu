@@ -48,23 +48,41 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
-  deploy_vps:
+    deploy_vps:
     name: Deploy to VPS (rolling restart 4 containers)
     runs-on: ubuntu-latest
     needs: [build_push]
     steps:
-      - name: Deploy via SSH
+      - name: Deploy via SSH (debug)
         uses: appleboy/ssh-action@v1.0.3
         with:
           host: ${{ secrets.VPS_HOST }}
           username: ${{ secrets.VPS_USER }}
           key: ${{ secrets.VPS_SSH_KEY }}
           port: ${{ secrets.VPS_PORT }}
+          script_stop: true
+          debug: true
           script: |
             set -euo pipefail
+            set -x
 
-            IMAGE="${{ env.IMAGE_REPO }}:sha-${{ github.sha }}"
+            IMAGE="ghcr.io/lutfyalfean/project-labubu:sha-${{ github.sha }}"
             CONTAINER_PORT="7903"
+
+            echo "==> Who am I / where am I"
+            whoami
+            hostname
+            docker --version || true
+
+            echo "==> Ensure curl or wget exists"
+            if command -v curl >/dev/null 2>&1; then
+              HTTP_GET='curl -fsS'
+            elif command -v wget >/dev/null 2>&1; then
+              HTTP_GET='wget -qO-'
+            else
+              echo "ERROR: curl/wget not found. Install one of them."
+              exit 1
+            fi
 
             echo "==> Login GHCR (pull)"
             echo "${{ secrets.GHCR_TOKEN }}" | docker login ghcr.io -u "${{ secrets.GHCR_USER }}" --password-stdin
@@ -86,7 +104,7 @@ jobs:
                 "${IMAGE}"
 
               for i in {1..25}; do
-                if curl -fsS "http://localhost:${HOST_PORT}" >/dev/null 2>&1; then
+                if ${HTTP_GET} "http://localhost:${HOST_PORT}" >/dev/null 2>&1; then
                   echo "OK: ${NAME} is up on port ${HOST_PORT}"
                   return 0
                 fi
@@ -98,15 +116,11 @@ jobs:
               return 0
             }
 
-            # Sesuaikan mapping port kamu (dari list container yang kamu kirim)
             restart_one "labubu-app1" 7903
             restart_one "labubu-app2" 7904
             restart_one "labubu-app3" 7905
             restart_one "labubu-app4" 7906
 
-            echo "==> Done. Current containers:"
             docker ps --format "table {{.Names}}\t{{.Image}}\t{{.Ports}}\t{{.Status}}"
-
-            echo "==> Cleanup dangling images"
             docker image prune -f
 
